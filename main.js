@@ -11,9 +11,13 @@ async function makeQuery(endpoint, method='GET', payload='') {
             'Accept': 'application/json',
             'Content-Type': 'application/json'
         },
-        ...(method.toLowerCase() == 'post' && { body: JSON.stringify(payload) })
+        // ...(method.toLowerCase() == 'post' && { body: JSON.stringify(payload) })
     }
     
+if (method.toLowerCase()== "put" || method.toLowerCase() == "post") {
+    options.body = JSON.stringify(payload);
+}
+
     let response = await fetch(BASE_URL + endpoint, options);
     let { data } = await response.json();
     return data;
@@ -24,10 +28,11 @@ async function drawUsers() {
     document.querySelector("#users").innerHTML = '';
     users.forEach(user => {
         document.querySelector("#users").innerHTML += `
-            <p>
-                ${user.firstName} ${user.lastName}
+              <input id="firstName-${user.id}" value="${user.firstName}">
+              <input id="lastName-${user.id}" value=" ${user.lastName}">
+              <button onclick="updateUser('${user.id}')">Update</button>
               <button onclick="deletUser('${user.id}')">Delete</button>
-            </p>
+           
             <hr>
         `;
     })
@@ -42,13 +47,24 @@ creat_btn.addEventListener("click", async ()=>{
     let payload = {
         firstName,
         lastName,
-        email,
-       
+        email
     }
     await makeQuery('user/create', 'post', payload)
-
+    drawUsers()
 })
 async function deletUser(userId){
-    await   makeQuery('user/+ userId', 'delete')
+    await   makeQuery('user/'+ userId, 'delete')
     drawUsers()
+}
+
+async function updateUser(userId) {
+    const newFirstName = document.querySelector(`#firstName-${userId}`).value;
+    const newLastName = document.querySelector(`#lastName-${userId}`).value;
+
+const payload = {
+    firstName: newFirstName,
+    lastName: newLastName,
+}
+await makeQuery('user/'+userId, 'put', payload)
+
 }
